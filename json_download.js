@@ -33,7 +33,7 @@ link.setAttribute('href', URL.createObjectURL(blob));
 
 // file name dd-mm-yyyy.json
 const today = new Date();
-const fileName = `grid_data_${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}.json`;
+const fileName = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}.json`;
 
 link.setAttribute('download', fileName);
 document.body.appendChild(link);
