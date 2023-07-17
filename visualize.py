@@ -104,18 +104,39 @@ def visualize_profit_loss_by_date(funds_by_date):
     fund_names_by_date = {}
     profit_loss_values_by_date = {}
 
+    all_funds = set()
+
     for date in sorted_dates:
         funds: list[Fund] = funds_by_date[date]
         sorted_funds = sorted(
             funds, key=lambda fund: fund.fund_name
         )  # Sort by fund name
         fund_names = [fund.fund_name for fund in sorted_funds]
-        profit_loss_values = [fund.profit_loss for fund in sorted_funds]
+        real_profit_loss_values = []
+
+        for fund in sorted_funds:
+            if fund.amount != 0:
+                real_profit_loss_values.append(fund.profit_loss)
+            else:
+                real_profit_loss_values.append(0)
+
         fund_names_by_date[date] = fund_names
-        profit_loss_values_by_date[date] = profit_loss_values
+        profit_loss_values_by_date[date] = real_profit_loss_values
+
+        all_funds.update(fund_names)  # Collect all fund names
+
+    # Ensure all funds have a corresponding value for each date
+    for date in sorted_dates:
+        missing_funds = all_funds - set(fund_names_by_date[date])
+        for fund in missing_funds:
+            if fund in fund_names_by_date[sorted_dates[-1]]:
+                index = fund_names_by_date[sorted_dates[-1]].index(fund)
+                profit_loss_values_by_date[date].insert(index, 0)
+            else:
+                profit_loss_values_by_date[date].append(0)
+                fund_names_by_date[sorted_dates[-1]].append(fund)
 
     # Plotting
-    mpl_style(dark=True)
     plt.figure(figsize=(16, 9))
     bar_width = 0.15
     num_dates = len(sorted_dates)
@@ -130,6 +151,7 @@ def visualize_profit_loss_by_date(funds_by_date):
             color="C" + str(i),
         )
 
+    plt.grid(False)
     plt.xlabel("Fund")
     plt.ylabel("Profit/Loss (TL)")
     plt.title("Fund Profit/Loss by Date")
@@ -139,11 +161,12 @@ def visualize_profit_loss_by_date(funds_by_date):
         rotation=45,
     )
 
-    total_profit_loss = [sum(profit_loss_values_by_date[date]) for date in sorted_dates]
-
+    average_profit_loss = [
+        np.sum(profit_loss_values_by_date[date]) for date in sorted_dates
+    ]
     plt.legend(
         [
-            f"Date: {date}, Total Profit/Loss: {total_profit_loss[i]:.2f} TL"
+            f"Date: {date}, Total Profit/Loss: {average_profit_loss[i]:.2f}"
             for i, date in enumerate(sorted_dates)
         ]
     )
@@ -158,19 +181,38 @@ def visualize_profit_amount_ratio_by_date(funds_by_date):
 
     fund_names_by_date = {}
     real_profit_loss_values_by_date = {}
-    mpl_style(dark=True)
+
+    all_funds = set()
+
     for date in sorted_dates:
         funds: list[Fund] = funds_by_date[date]
         sorted_funds = sorted(
             funds, key=lambda fund: fund.fund_name
         )  # Sort by fund name
         fund_names = [fund.fund_name for fund in sorted_funds]
-        real_profit_loss_values = [
-            fund.profit_loss / fund.amount for fund in sorted_funds
-        ]
-        real_profit_loss_values = [value * 100 for value in real_profit_loss_values]
+        real_profit_loss_values = []
+
+        for fund in sorted_funds:
+            if fund.amount != 0:
+                real_profit_loss_values.append(fund.profit_loss / fund.amount * 100)
+            else:
+                real_profit_loss_values.append(0)
+
         fund_names_by_date[date] = fund_names
         real_profit_loss_values_by_date[date] = real_profit_loss_values
+
+        all_funds.update(fund_names)  # Collect all fund names
+
+    # Ensure all funds have a corresponding value for each date
+    for date in sorted_dates:
+        missing_funds = all_funds - set(fund_names_by_date[date])
+        for fund in missing_funds:
+            if fund in fund_names_by_date[sorted_dates[-1]]:
+                index = fund_names_by_date[sorted_dates[-1]].index(fund)
+                real_profit_loss_values_by_date[date].insert(index, 0)
+            else:
+                real_profit_loss_values_by_date[date].append(0)
+                fund_names_by_date[sorted_dates[-1]].append(fund)
 
     # Plotting
     plt.figure(figsize=(16, 9))
@@ -186,6 +228,7 @@ def visualize_profit_amount_ratio_by_date(funds_by_date):
             bar_width,
             color="C" + str(i),
         )
+
     plt.grid(False)
     plt.xlabel("Fund")
     plt.ylabel("Profit/Loss (%)")
@@ -209,12 +252,14 @@ def visualize_profit_amount_ratio_by_date(funds_by_date):
     plt.show()
 
 
+
+
 funds_by_date = get_funds_from_folder("datas")
 visualize_profit_loss_by_date(funds_by_date)
 # visualize_profit_amount_ratio_by_date(funds_by_date)
 
 # visualize_profit_amount_ratio()
-# visualize_profit_loss()
+# visualize_profit_loss("datas/17-7-2023.json")
 
 
 # for k,v in get_funds_from_folder("datas").items():
